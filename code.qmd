@@ -1,0 +1,436 @@
+---
+title: "_Azospirillum brasilense_ as a bioinoculant to alleviate salinity effects on quinoa seed germination"
+author: "Jose David Apaza-Calcina, Milagros Ninoska Munoz-Salas, Flavio Lozano-Isla, Rachel Passos Rezende, Raner Santana"
+format:
+  html:
+    toc: true
+    toc-expand: 2
+    toc-location: left
+    number-sections: true
+    self-contained: true
+    code-fold: true
+    output-file: "ESM_01"
+editor_options: 
+  chunk_output_type: console
+execute: 
+  warning: false
+  message: false
+  echo: true
+---
+
+# Project Setup
+
+```{r}
+#| label:  setup
+
+source('https://inkaverse.com/setup.r')
+library(GerminaR)
+
+cat("Project: ", getwd())
+cat("CPU cores available: ", parallel::detectCores())
+RhpcBLASctl::blas_set_num_threads(parallel::detectCores()*0.8)
+session_info()
+```
+
+# Base de datos
+
+> https://docs.google.com/spreadsheets/d/1t20oZQ_NR4zC8-gwkmV6UUMZwC24Hvh6WNJVtCXCF30/edit?gid=506947099#gid=506947099
+
+# Import data
+
+```{r}
+gs <- "https://docs.google.com/spreadsheets/d/1t20oZQ_NR4zC8-gwkmV6UUMZwC24Hvh6WNJVtCXCF30/edit?gid=506947099#gid=506947099" %>% 
+  as_sheets_id()
+
+germ <- gs %>%
+  range_read("radicula") %>%
+  rename_with(~ iconv(.x, from = "UTF-8", to = "ASCII//TRANSLIT")) %>% 
+  rename_with(~ str_replace_all(.x, "^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$", "")) %>% 
+  rename_with(~ tolower(gsub("[^[:alnum:]_]", "_", .x))) %>% 
+  mutate(across(1:nacl, ~ as.factor(.))) %>% 
+  dplyr::select(where(~ mean(!is.na(.)) >= 0.1))
+  
+germ %>% str()
+
+germ %>% web_table()
+
+cot <- gs %>%
+  range_read("germination") %>%
+  rename_with(~ iconv(.x, from = "UTF-8", to = "ASCII//TRANSLIT")) %>% 
+  rename_with(~ str_replace_all(.x, "^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$", "")) %>% 
+  rename_with(~ tolower(gsub("[^[:alnum:]_]", "_", .x))) %>% 
+  mutate(across(1:nacl, ~ as.factor(.))) %>% 
+  dplyr::select(where(~ mean(!is.na(.)) >= 0.1))
+  
+cot %>% str()
+
+cot %>% web_table()
+
+growth <- gs %>%
+  range_read("growth") %>%
+  rename_with(~ iconv(.x, from = "UTF-8", to = "ASCII//TRANSLIT")) %>% 
+  rename_with(~ str_replace_all(.x, "^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$", "")) %>% 
+  rename_with(~ tolower(gsub("[^[:alnum:]_]", "_", .x))) %>% 
+  mutate(across(1:repetition, ~ as.factor(.))) %>% 
+  dplyr::select(where(~ mean(!is.na(.)) >= 0.1))
+  
+growth %>% str()
+
+growth %>% web_table()
+
+bacteria <- gs %>%
+  range_read("bacterial") %>%
+  rename_with(~ iconv(.x, from = "UTF-8", to = "ASCII//TRANSLIT")) %>% 
+  rename_with(~ str_replace_all(.x, "^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$", "")) %>% 
+  rename_with(~ tolower(gsub("[^[:alnum:]_]", "_", .x))) %>% 
+  mutate(across(1:rep, ~ as.factor(.))) %>% 
+  dplyr::select(where(~ mean(!is.na(.)) >= 0.1))
+  
+bacteria %>% str()
+
+bacteria %>% web_table()
+```
+
+# Statistical Analysis
+
+## (i) to assess the effect of salinity gradient (0 to 450 mM NaCl) on seed germination and cotyledon emergence as indicators of bacterial efficacy
+
+```{r}
+# germination analysis (ten variables)
+
+gsm <- germ %>% 
+  as.data.frame() %>% 
+  ger_summary(SeedN = "seeds"
+              , evalName = "d"
+              , data = .
+              ) %>% 
+  dplyr::select(1:nacl, grp, mgt, unc, syn)
+
+gsm %>% kable()
+```
+
+```{r}
+dt <- gsm
+
+rs <- xfun::cache_rds({
+  
+  traits <- names(dt)[4:length(dt)]
+  # trait <- "grp" 
+  
+  results <- traits %>% set_names() %>% map( \(trait) {
+    
+    # Liberar memoria
+    gc()
+    
+    # Definir modelo
+    mdf <- paste(trait, "0 + strains*nacl + (1|repetition)", sep = " ~ ") 
+    
+    # Mostrar qué rasgo se analiza
+    cat("\n\n## Análisis para: ", trait, "\n\n")
+    
+    
+    cat("\n\n### Diagnostico de modelo\n\n")
+    
+    # Remover outliers (asumo que tienes esta función personalizada)
+    md <- dt %>% 
+      remove_outliers(as.formula(mdf),
+                      plot_diag = TRUE,
+                      drop_na = TRUE)
+    
+    md$diagplot %>% print()
+    
+    if (nrow(md$outliers) > 0) {
+    cat("> Outliers detectados\n")
+    md$outliers %>% kable() %>% print()
+    } else {
+    cat("> No se detectaron outliers\n")
+    }
+    
+    mdc <- md$model$raw
+    
+    cat("\n\n### ANOVA tipo III\n\n")
+    
+    Anova(mdc, type = 3, test.statistic = "F") %>%  print()
+    
+    cat("\n\n### Comparaciones múltiples (Emmeans)\n\n")
+    
+    # Comparaciones múltiples into the groups
+    mc_in <- emmeans(mdc, ~ strains|nacl, type = "response") %>% 
+      cld(Letters = letters, reversed = TRUE) %>% 
+      mutate(across(".group", trimws)) %>% 
+      mutate(across(".group", tolower)) %>% 
+      rename(sig_in = ".group")
+    
+    mc_ou <- emmeans(mdc, ~ nacl|strains, type = "response") %>% 
+      cld(Letters = letters, reversed = TRUE) %>% 
+      mutate(across(".group", trimws)) %>% 
+      mutate(across(".group", toupper)) %>% 
+      rename(sig_ou = ".group")
+    
+    mc <- merge(mc_in, mc_ou) %>% 
+      unite(col = "sig", c("sig_in", "sig_ou"), sep = "")
+    
+    mc %>% kable() %>% print()
+    
+    cat("\n\n### Gráfico resumen\n\n")
+    
+    plot <- mc %>% 
+      plot_smr(type = "line",
+               x = "nacl",
+               y = "emmean"
+               , group = "strains"
+               , ylab = trait
+               , sig = "sig"
+               , error = "SE") 
+    
+    plot %>% print()
+    
+    list(mc = mc,
+         plot = plot
+         )
+  })
+  
+  results
+  
+}, file = "result.rds", rerun = T)
+```
+
+```{r}
+plots <- list(rs$grp$plot +
+                scale_y_continuous(limits = c(50, 110)
+                                  , breaks = seq(0, 200, by = 10)) +
+                labs(x = ""
+                     , y = "Germination percentage (%)"
+                     ) +
+                theme(legend.position = "none"
+                      , axis.text.x = element_blank()
+                      , strip.text = element_blank()
+                      )
+              , rs$mgt$plot +
+                scale_y_continuous(limits = c(1, 6)
+                                  , breaks = seq(0, 200, by = 1)) +
+                labs(x = ""
+                     , y = "Mean germination time (days)"
+                     ) +
+                theme(legend.position = "none"
+                      , axis.text.x = element_blank()
+                      , strip.text = element_blank()
+                      )
+              , rs$unc$plot +
+                scale_y_continuous(limits = c(0.25, 3.25)
+                                  , breaks = seq(0, 100, by = 0.5)) +
+                labs(x = "NaCl (mM)"
+                     , y = "Germination uncertainty"
+                     ) +
+                theme(legend.position = "none"
+                      )
+              , rs$syn$plot +
+                scale_y_continuous(limits = c(0, 1)
+                                  , breaks = seq(0, 100, by = 0.25)) +
+                labs(x = "NaCl (mM)"
+                     , y = "Germination synchrony"
+                     ) +
+                theme(legend.position = "none"
+                      , axis.text.y = element_text(angle = 90)
+                      )
+              )
+
+# extraer leyenda
+legend <- get_plot_component(rs$grp$plot +
+                               theme(legend.position = "top"
+                                     , legend.direction = "horizontal")
+                             , "guide-box", return_all = T)
+
+fgrids <- plots %>% 
+  cowplot::plot_grid(plotlist = ., ncol = 2, labels = "auto") 
+
+export <-  list(legend[[4]], fgrids) %>% 
+  cowplot::plot_grid(plotlist = .
+                     , ncol = 1
+                     , rel_heights = c(0.1, 1))
+  
+export %>% 
+  ggsave(plot = ., "manuscript/Figure-01.jpg", width = 20, height = 18
+         , units = "cm")
+```
+
+## (ii) to quantify seedling growth by measuring shoot and root length and dry biomass in inoculated versus non-inoculated treatments under saline and non-saline conditions
+
+## (iii) to evaluate physiological responses to salinity through the activity of antioxidant enzymes (SOD, CAT, APX, GPX)
+
+
+## (iv) to determine the growth capacity of BR-11001 and BR-11002 in saline media, as a proxy for their viability and functional persistence under stress.
+
+
+```{r}
+
+dt <- fb
+
+# Calcular y cachear resultados
+rs <- xfun::cache_rds({
+  
+  traits <- names(dt)[8:length(dt)]
+  
+  results <- traits %>% set_names() %>% map( \(trait) {
+    
+    # Liberar memoria
+    gc()
+    
+    # Definir modelo
+    mdf <- paste(trait, "0 + variedad + (1 | zona)", sep = " ~ ") 
+    
+    # Mostrar qué rasgo se analiza
+    cat("\n\n## Análisis para: ", trait, "\n\n")
+    
+    
+    cat("\n\n### Diagnostico de modelo\n\n")
+    
+    # Remover outliers (asumo que tienes esta función personalizada)
+    md <- dt %>% 
+      remove_outliers(as.formula(mdf),
+                      plot_diag = TRUE,
+                      drop_na = TRUE)
+    
+    md$diagplot %>% print()
+    
+    if (nrow(md$outliers) > 0) {
+    cat("> Outliers detectados\n")
+    md$outliers %>% kable() %>% print()
+    } else {
+    cat("> No se detectaron outliers\n")
+    }
+    
+    mdc <- md$model$clean
+    
+    cat("\n\n### ANOVA tipo III\n\n")
+    
+    Anova(mdc, type = 3, test.statistic = "F") %>%  print()
+    
+    cat("\n\n### Comparaciones múltiples (Emmeans)\n\n")
+    
+    # Comparaciones múltiples into the groups
+    mc <- emmeans(mdc, ~ variedad, type = "response") %>% 
+      cld(Letters = letters, reversed = TRUE) %>% 
+      mutate(across(".group", trimws)) %>% 
+      mutate(across(".group", tolower)) %>% 
+      rename(sig = ".group")
+
+    mc %>% kable() %>% print()
+    
+    cat("\n\n### Gráfico resumen\n\n")
+    
+    plot <- mc %>% 
+      plot_smr(type = "bar",
+               x = "variedad",
+               y = "emmean"
+               , ylab = trait,
+               sig = "sig",
+               error = "SE") 
+    
+    plot %>% print()
+    
+    list(mc = mc,
+         plot = plot
+         )
+  })
+  
+  results
+  
+}, file = "result.rds", rerun = T)
+```
+
+# Analisis de datos variedad x zona
+
+- Son 15 zonas
+
+```{r}
+
+dt <- fb
+
+# Calcular y cachear resultados
+rs <- xfun::cache_rds({
+  
+  traits <- names(dt)[8:length(dt)]
+  
+  results <- traits %>% set_names() %>% map( \(trait) {
+    
+    # Liberar memoria
+    gc()
+    
+    # Definir modelo
+    mdf <- paste(trait, "0 + variedad*zona + (1 | lote)", sep = " ~ ") 
+    
+    # Mostrar qué rasgo se analiza
+    cat("\n\n## Análisis para: ", trait, "\n\n")
+    
+    
+    cat("\n\n### Diagnostico de modelo\n\n")
+    
+    # Remover outliers (asumo que tienes esta función personalizada)
+    md <- dt %>% 
+      remove_outliers(as.formula(mdf),
+                      plot_diag = TRUE,
+                      drop_na = TRUE)
+    
+    md$diagplot %>% print()
+    
+    if (nrow(md$outliers) > 0) {
+    cat("> Outliers detectados\n")
+    md$outliers %>% kable() %>% print()
+    } else {
+    cat("> No se detectaron outliers\n")
+    }
+    
+    mdc <- md$model$clean
+    
+    cat("\n\n### ANOVA tipo III\n\n")
+    
+    Anova(mdc, type = 3, test.statistic = "F") %>%  print()
+    
+    cat("\n\n### Comparaciones múltiples (Emmeans)\n\n")
+    
+    # Comparaciones múltiples into the groups
+    mc_in <- emmeans(mdc, ~ variedad | zona, type = "response") %>% 
+      cld(Letters = letters, reversed = TRUE) %>% 
+      mutate(across(".group", trimws)) %>% 
+      mutate(across(".group", tolower)) %>% 
+      rename(sig_in = ".group")
+    
+    # Comparaciones múltiples between groups
+    mc_ou <- emmeans(mdc, ~ variedad | zona, type = "response") %>% 
+      cld(Letters = letters, reversed = TRUE) %>% 
+      mutate(across(".group", trimws)) %>% 
+      mutate(across(".group", toupper)) %>% 
+      rename(sig_ou = ".group")
+    
+    mc <- merge(mc_in, mc_ou) %>% 
+      unite("sig", c(sig_in, sig_ou), remove = F, sep = "")
+    
+    mc %>% kable() %>% print()
+    
+    cat("\n\n### Gráfico resumen\n\n")
+    
+    plot <- mc %>% 
+      plot_smr(type = "bar",
+               x = "variedad",
+               y = "emmean"
+               , group = "zona"
+               , ylab = trait,
+               sig = "sig",
+               error = "SE") 
+    
+    plot %>% print()
+    
+    list(mc = mc,
+         plot = plot
+         )
+  })
+  
+  results
+  
+}, file = "result.rds", rerun = T)
+```
+
+# Faltabdo
+
+- Comparación de variables entre distritos por cada zona en cada variedad
