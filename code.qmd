@@ -110,7 +110,10 @@ gsm %>% kable()
 ```
 
 ```{r}
-dt <- gsm
+dt <- gsm %>% 
+  mutate(strains = factor(strains
+                         , levels = c("Control", "BR-11001", "BR-11002")
+                         , ordered = TRUE))
 
 rs <- xfun::cache_rds({
   
@@ -181,7 +184,8 @@ rs <- xfun::cache_rds({
                , group = "strains"
                , ylab = trait
                , sig = "sig"
-               , error = "SE") 
+               , error = "SE") +
+      scale_color_manual(values = c("#fbb4ae", "#b3cde3", "#ccebc5"))
     
     plot %>% print()
     
@@ -256,20 +260,16 @@ export %>%
 
 ## (ii) to quantify seedling growth by measuring shoot and root length and dry biomass in inoculated versus non-inoculated treatments under saline and non-saline conditions
 
-## (iii) to evaluate physiological responses to salinity through the activity of antioxidant enzymes (SOD, CAT, APX, GPX)
-
-
-## (iv) to determine the growth capacity of BR-11001 and BR-11002 in saline media, as a proxy for their viability and functional persistence under stress.
-
-
 ```{r}
+dtx <- growth %>% 
+  mutate(strains = factor(strains
+                         , levels = c("Control", "BR-11001", "BR-11002")
+                         , ordered = TRUE))
+# trait <- "shoot_length" 
 
-dt <- fb
-
-# Calcular y cachear resultados
 rs <- xfun::cache_rds({
   
-  traits <- names(dt)[8:length(dt)]
+  traits <- names(dtx)[4:length(dtx)]
   
   results <- traits %>% set_names() %>% map( \(trait) {
     
@@ -277,7 +277,7 @@ rs <- xfun::cache_rds({
     gc()
     
     # Definir modelo
-    mdf <- paste(trait, "0 + variedad + (1 | zona)", sep = " ~ ") 
+    mdf <- paste(trait, "0 + strains*nacl + (1|repetition)", sep = " ~ ") 
     
     # Mostrar qué rasgo se analiza
     cat("\n\n## Análisis para: ", trait, "\n\n")
@@ -286,7 +286,7 @@ rs <- xfun::cache_rds({
     cat("\n\n### Diagnostico de modelo\n\n")
     
     # Remover outliers (asumo que tienes esta función personalizada)
-    md <- dt %>% 
+    md <- dtx %>% 
       remove_outliers(as.formula(mdf),
                       plot_diag = TRUE,
                       drop_na = TRUE)
@@ -309,115 +309,34 @@ rs <- xfun::cache_rds({
     cat("\n\n### Comparaciones múltiples (Emmeans)\n\n")
     
     # Comparaciones múltiples into the groups
-    mc <- emmeans(mdc, ~ variedad, type = "response") %>% 
-      cld(Letters = letters, reversed = TRUE) %>% 
-      mutate(across(".group", trimws)) %>% 
-      mutate(across(".group", tolower)) %>% 
-      rename(sig = ".group")
-
-    mc %>% kable() %>% print()
-    
-    cat("\n\n### Gráfico resumen\n\n")
-    
-    plot <- mc %>% 
-      plot_smr(type = "bar",
-               x = "variedad",
-               y = "emmean"
-               , ylab = trait,
-               sig = "sig",
-               error = "SE") 
-    
-    plot %>% print()
-    
-    list(mc = mc,
-         plot = plot
-         )
-  })
-  
-  results
-  
-}, file = "result.rds", rerun = T)
-```
-
-# Analisis de datos variedad x zona
-
-- Son 15 zonas
-
-```{r}
-
-dt <- fb
-
-# Calcular y cachear resultados
-rs <- xfun::cache_rds({
-  
-  traits <- names(dt)[8:length(dt)]
-  
-  results <- traits %>% set_names() %>% map( \(trait) {
-    
-    # Liberar memoria
-    gc()
-    
-    # Definir modelo
-    mdf <- paste(trait, "0 + variedad*zona + (1 | lote)", sep = " ~ ") 
-    
-    # Mostrar qué rasgo se analiza
-    cat("\n\n## Análisis para: ", trait, "\n\n")
-    
-    
-    cat("\n\n### Diagnostico de modelo\n\n")
-    
-    # Remover outliers (asumo que tienes esta función personalizada)
-    md <- dt %>% 
-      remove_outliers(as.formula(mdf),
-                      plot_diag = TRUE,
-                      drop_na = TRUE)
-    
-    md$diagplot %>% print()
-    
-    if (nrow(md$outliers) > 0) {
-    cat("> Outliers detectados\n")
-    md$outliers %>% kable() %>% print()
-    } else {
-    cat("> No se detectaron outliers\n")
-    }
-    
-    mdc <- md$model$clean
-    
-    cat("\n\n### ANOVA tipo III\n\n")
-    
-    Anova(mdc, type = 3, test.statistic = "F") %>%  print()
-    
-    cat("\n\n### Comparaciones múltiples (Emmeans)\n\n")
-    
-    # Comparaciones múltiples into the groups
-    mc_in <- emmeans(mdc, ~ variedad | zona, type = "response") %>% 
+    mc_in <- emmeans(mdc, ~ strains|nacl, type = "response") %>% 
       cld(Letters = letters, reversed = TRUE) %>% 
       mutate(across(".group", trimws)) %>% 
       mutate(across(".group", tolower)) %>% 
       rename(sig_in = ".group")
     
-    # Comparaciones múltiples between groups
-    mc_ou <- emmeans(mdc, ~ variedad | zona, type = "response") %>% 
+    mc_ou <- emmeans(mdc, ~ nacl|strains, type = "response") %>% 
       cld(Letters = letters, reversed = TRUE) %>% 
       mutate(across(".group", trimws)) %>% 
       mutate(across(".group", toupper)) %>% 
       rename(sig_ou = ".group")
     
     mc <- merge(mc_in, mc_ou) %>% 
-      unite("sig", c(sig_in, sig_ou), remove = F, sep = "")
+      unite(col = "sig", c("sig_in", "sig_ou"), sep = "")
     
     mc %>% kable() %>% print()
     
     cat("\n\n### Gráfico resumen\n\n")
     
     plot <- mc %>% 
-      plot_smr(type = "bar",
-               x = "variedad",
+      plot_smr(type = "line",
+               x = "nacl",
                y = "emmean"
-               , group = "zona"
-               , ylab = trait,
-               sig = "sig",
-               error = "SE") 
+               , group = "strains"
+               , ylab = trait
+               , sig = "sig"
+               , error = "SE") +
+      scale_color_manual(values = c("#fbb4ae", "#b3cde3", "#ccebc5"))
     
     plot %>% print()
     
@@ -431,6 +350,125 @@ rs <- xfun::cache_rds({
 }, file = "result.rds", rerun = T)
 ```
 
-# Faltabdo
+```{r}
+plots <- list(rs$shoot_length$plot +
+                scale_y_continuous(limits = c(1, 7)
+                                  , breaks = seq(0, 200, by = 1)) +
+                labs(x = ""
+                     , y = "Shoot length (cm)"
+                     ) +
+                theme(legend.position = "none"
+                      , axis.text.x = element_blank()
+                      , strip.text = element_blank()
+                      )
+              , rs$root_length$plot +
+                scale_y_continuous(limits = c(0.5, 4.5)
+                                  , breaks = seq(0, 200, by = 0.5)) +
+                labs(x = ""
+                     , y = "Root length (cm)"
+                     ) +
+                theme(legend.position = "none"
+                      , axis.text.x = element_blank()
+                      , strip.text = element_blank()
+                      )
+              , rs$dry_weight$plot +
+                scale_y_continuous(limits = c(0.01, 0.06)
+                                  , breaks = seq(0, 100, by = 0.01)) +
+                labs(x = "NaCl (mM)"
+                     , y = "Dry weight (g)"
+                     ) +
+                theme(legend.position = "none"
+                      )
+              , rs$humidity_cont$plot +
+                scale_y_continuous(limits = c(0.1, 0.6)
+                                  , breaks = seq(0, 100, by = 0.1)) +
+                labs(x = "NaCl (mM)"
+                     , y = "Moisture content (%)"
+                     ) +
+                theme(legend.position = "none"
+                      , axis.text.y = element_text(angle = 90)
+                      )
+              )
 
-- Comparación de variables entre distritos por cada zona en cada variedad
+# extraer leyenda
+legend <- get_plot_component(rs$shoot_length$plot +
+                               theme(legend.position = "top"
+                                     , legend.direction = "horizontal")
+                             , "guide-box", return_all = T)
+
+fgrids <- plots %>% 
+  cowplot::plot_grid(plotlist = ., ncol = 2, labels = "auto") 
+
+export <-  list(legend[[4]], fgrids) %>% 
+  cowplot::plot_grid(plotlist = .
+                     , ncol = 1
+                     , rel_heights = c(0.1, 1))
+  
+export %>% 
+  ggsave(plot = ., "manuscript/Figure-02.jpg", width = 22, height = 20
+         , units = "cm")
+```
+
+## (iii) to evaluate physiological responses to salinity through the activity of antioxidant enzymes (SOD, CAT, APX, GPX)
+
+```{r}
+plots <- list(rs$sod$plot +
+                # scale_y_continuous(limits = c(1, 7)
+                #                   , breaks = seq(0, 200, by = 1)) +
+                labs(x = ""
+                     , y = "Superoxide dismutase (SOD)"
+                     ) +
+                theme(legend.position = "none"
+                      , axis.text.x = element_blank()
+                      , strip.text = element_blank()
+                      )
+              , rs$cat$plot +
+                # scale_y_continuous(limits = c(0.5, 4.5)
+                #                   , breaks = seq(0, 200, by = 0.5)) +
+                labs(x = ""
+                     , y = "Catalase (CAT)"
+                     ) +
+                theme(legend.position = "none"
+                      , axis.text.x = element_blank()
+                      , strip.text = element_blank()
+                      )
+              , rs$apx$plot +
+                # scale_y_continuous(limits = c(0.01, 0.06)
+                #                   , breaks = seq(0, 100, by = 0.01)) +
+                labs(x = "NaCl (mM)"
+                     , y = "Ascorbate peroxidase (APX)"
+                     ) +
+                theme(legend.position = "none"
+                      )
+              , rs$gpx$plot +
+                # scale_y_continuous(limits = c(0.1, 0.6)
+                #                   , breaks = seq(0, 100, by = 0.1)) +
+                labs(x = "NaCl (mM)"
+                     , y = "Guaiacol peroxidase (GPX)"
+                     ) +
+                theme(legend.position = "none"
+                      , axis.text.y = element_text(angle = 90)
+                      )
+              )
+
+# extraer leyenda
+legend <- get_plot_component(rs$shoot_length$plot +
+                               theme(legend.position = "top"
+                                     , legend.direction = "horizontal")
+                             , "guide-box", return_all = T)
+
+fgrids <- plots %>% 
+  cowplot::plot_grid(plotlist = ., ncol = 2, labels = "auto") 
+
+export <-  list(legend[[4]], fgrids) %>% 
+  cowplot::plot_grid(plotlist = .
+                     , ncol = 1
+                     , rel_heights = c(0.1, 1))
+  
+export %>% 
+  ggsave(plot = ., "manuscript/Figure-03.jpg", width = 22, height = 20
+         , units = "cm")
+```
+
+## (iv) to determine the growth capacity of BR-11001 and BR-11002 in saline media, as a proxy for their viability and functional persistence under stress.
+
