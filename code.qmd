@@ -25,6 +25,7 @@ execute:
 
 source('https://inkaverse.com/setup.r')
 library(GerminaR)
+library(scales)
 
 cat("Project: ", getwd())
 cat("CPU cores available: ", parallel::detectCores())
@@ -78,22 +79,170 @@ growth %>% str()
 
 growth %>% web_table()
 
-bacteria <- gs %>%
+bacterial <- gs %>%
   range_read("bacterial") %>%
   rename_with(~ iconv(.x, from = "UTF-8", to = "ASCII//TRANSLIT")) %>% 
   rename_with(~ str_replace_all(.x, "^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$", "")) %>% 
   rename_with(~ tolower(gsub("[^[:alnum:]_]", "_", .x))) %>% 
-  mutate(across(1:rep, ~ as.factor(.))) %>% 
+  mutate(across(1:repetition, ~ as.factor(.))) %>% 
   dplyr::select(where(~ mean(!is.na(.)) >= 0.1))
   
-bacteria %>% str()
+bacterial %>% str()
 
-bacteria %>% web_table()
+bacterial %>% web_table()
+
+# https://colorbrewer2.org/
 ```
 
 # Statistical Analysis
 
-## (i) to assess the effect of salinity gradient (0 to 450 mM NaCl) on seed germination and cotyledon emergence as indicators of bacterial efficacy
+## To determine the growth capacity of BR-11001 and BR-11002 in saline media, as a proxy for their viability and functional persistence under stress.
+
+
+```{r}
+dtx <- bacterial 
+# trait <- "bacterial_growth"
+
+dtx %>% str()
+
+rs <- xfun::cache_rds({
+  
+  traits <- names(dtx)[4:length(dtx)]
+  
+  results <- traits %>% set_names() %>% map( \(trait) {
+    
+    # Liberar memoria
+    gc()
+    
+    # Definir modelo
+    mdf <- paste(trait, "0 + strains*nacl + (1|repetition)", sep = " ~ ") 
+    
+    # Mostrar qué rasgo se analiza
+    cat("\n\n## Análisis para: ", trait, "\n\n")
+    
+    
+    cat("\n\n### Diagnostico de modelo\n\n")
+    
+    # Remover outliers (asumo que tienes esta función personalizada)
+    md <- dtx %>% 
+      remove_outliers(as.formula(mdf),
+                      plot_diag = TRUE,
+                      drop_na = TRUE)
+    
+    md$diagplot %>% print()
+    
+    if (nrow(md$outliers) > 0) {
+    cat("> Outliers detectados\n")
+    md$outliers %>% kable() %>% print()
+    } else {
+    cat("> No se detectaron outliers\n")
+    }
+    
+    mdc <- md$model$clean
+    
+    cat("\n\n### ANOVA tipo III\n\n")
+    
+    Anova(mdc, type = 3, test.statistic = "F") %>%  print()
+    
+    cat("\n\n### Comparaciones múltiples (Emmeans)\n\n")
+    
+    # Comparaciones múltiples into the groups
+    mc_in <- emmeans(mdc, ~ strains|nacl, type = "response") %>% 
+      cld(Letters = letters, reversed = TRUE) %>% 
+      mutate(across(".group", trimws)) %>% 
+      mutate(across(".group", tolower)) %>% 
+      rename(sig_in = ".group")
+    
+    mc_ou <- emmeans(mdc, ~ nacl|strains, type = "response") %>% 
+      cld(Letters = letters, reversed = TRUE) %>% 
+      mutate(across(".group", trimws)) %>% 
+      mutate(across(".group", toupper)) %>% 
+      rename(sig_ou = ".group")
+    
+    mc <- merge(mc_in, mc_ou) %>% 
+      unite(col = "sig", c("sig_in", "sig_ou"), sep = "")
+    
+    mc %>% kable() %>% print()
+    
+    cat("\n\n### Gráfico resumen\n\n")
+    
+    plot <- mc %>% 
+      plot_smr(type = "line",
+               x = "nacl",
+               y = "emmean"
+               , group = "strains"
+               , ylab = trait
+               , sig = "sig"
+               , error = "SE") +
+      scale_color_manual(values = c("#fbb4ae", "#b3cde3", "#ccebc5"
+                                    , "#decbe4", "#fed9a6", "#ffffcc"))
+    
+    plot %>% print()
+    
+    list(mc = mc,
+         plot = plot
+         )
+  })
+  
+  results
+  
+}, file = "result.rds", rerun = T)
+```
+
+```{r}
+plots <- list(rs$od_600_nm$plot +
+                scale_y_continuous(limits = c(0, 1.75)
+                                  , breaks = seq(0, 200, by = 0.25)) +
+                labs(x = ""
+                     , y = expression(OD[600]~"(nm)")
+                     ) +
+                theme(legend.position = "none"
+                      , axis.text.x = element_blank()
+                      , strip.text = element_blank()
+                      )
+              , rs$bacterial_growth$plot +
+                scale_y_log10(
+                  limits = c(2e8, 20e8),
+                  breaks = 10^seq(8, 20, by = 0.1),
+                  labels = trans_format("log10", math_format(10^.x))
+                  ) +
+                labs(x = ""
+                     , y = "Bacterial growth"
+                     ) +
+                theme(legend.position = "none"
+                      # , axis.text.x = element_blank()
+                      # , strip.text = element_blank()
+                      )
+              )
+
+legend <- get_plot_component(
+  rs$bacterial_growth$plot +
+    guides(color = guide_legend(nrow = 1)) +  # Esto fuerza una sola línea
+    theme(
+      legend.position = "bottom",
+      legend.direction = "horizontal",
+      legend.box = "horizontal"
+    ),
+  "guide-box",
+  return_all = TRUE
+)
+
+fgrids <- plots %>% 
+  cowplot::plot_grid(plotlist = ., ncol = 1, labels = "auto") 
+
+export <-  list(legend[[3]], fgrids) %>% 
+  cowplot::plot_grid(plotlist = .
+                     , ncol = 1
+                     , rel_heights = c(0.1, 1))
+  
+plot <- export %>% 
+  ggsave(plot = ., "manuscript/Figure-01.jpg", width = 22, height = 20
+         , units = "cm")
+
+plot %>% include_graphics()
+```
+
+## To assess the effect of salinity gradient (0 to 450 mM NaCl) on seed germination and cotyledon emergence as indicators of bacterial efficacy
 
 ```{r}
 # germination analysis (ten variables)
@@ -253,12 +402,14 @@ export <-  list(legend[[4]], fgrids) %>%
                      , ncol = 1
                      , rel_heights = c(0.1, 1))
   
-export %>% 
-  ggsave(plot = ., "manuscript/Figure-01.jpg", width = 20, height = 18
+plot <- export %>% 
+  ggsave(plot = ., "manuscript/Figure-02.jpg", width = 20, height = 18
          , units = "cm")
+
+plot %>% include_graphics()
 ```
 
-## (ii) to quantify seedling growth by measuring shoot and root length and dry biomass in inoculated versus non-inoculated treatments under saline and non-saline conditions
+## To quantify seedling growth by measuring shoot and root length and dry biomass in inoculated versus non-inoculated treatments under saline and non-saline conditions
 
 ```{r}
 dtx <- growth %>% 
@@ -378,6 +529,7 @@ plots <- list(rs$shoot_length$plot +
                      , y = "Dry weight (g)"
                      ) +
                 theme(legend.position = "none"
+                      , axis.text.y = element_text(angle = 90)
                       )
               , rs$humidity_cont$plot +
                 scale_y_continuous(limits = c(0.1, 0.6)
@@ -404,17 +556,19 @@ export <-  list(legend[[4]], fgrids) %>%
                      , ncol = 1
                      , rel_heights = c(0.1, 1))
   
-export %>% 
-  ggsave(plot = ., "manuscript/Figure-02.jpg", width = 22, height = 20
+plot <- export %>% 
+  ggsave(plot = ., "manuscript/Figure-03.jpg", width = 22, height = 20
          , units = "cm")
+
+plot %>% include_graphics()
 ```
 
-## (iii) to evaluate physiological responses to salinity through the activity of antioxidant enzymes (SOD, CAT, APX, GPX)
+## To evaluate physiological responses to salinity through the activity of antioxidant enzymes (SOD, CAT, APX, GPX)
 
 ```{r}
 plots <- list(rs$sod$plot +
-                # scale_y_continuous(limits = c(1, 7)
-                #                   , breaks = seq(0, 200, by = 1)) +
+                scale_y_continuous(limits = c(20, 70)
+                                  , breaks = seq(0, 200, by = 10)) +
                 labs(x = ""
                      , y = "Superoxide dismutase (SOD)"
                      ) +
@@ -423,8 +577,8 @@ plots <- list(rs$sod$plot +
                       , strip.text = element_blank()
                       )
               , rs$cat$plot +
-                # scale_y_continuous(limits = c(0.5, 4.5)
-                #                   , breaks = seq(0, 200, by = 0.5)) +
+                scale_y_continuous(limits = c(10, 50)
+                                  , breaks = seq(0, 200, by = 10)) +
                 labs(x = ""
                      , y = "Catalase (CAT)"
                      ) +
@@ -433,21 +587,20 @@ plots <- list(rs$sod$plot +
                       , strip.text = element_blank()
                       )
               , rs$apx$plot +
-                # scale_y_continuous(limits = c(0.01, 0.06)
-                #                   , breaks = seq(0, 100, by = 0.01)) +
+                scale_y_continuous(limits = c(7.5, 35)
+                                  , breaks = seq(0, 100, by = 5)) +
                 labs(x = "NaCl (mM)"
                      , y = "Ascorbate peroxidase (APX)"
                      ) +
                 theme(legend.position = "none"
                       )
               , rs$gpx$plot +
-                # scale_y_continuous(limits = c(0.1, 0.6)
-                #                   , breaks = seq(0, 100, by = 0.1)) +
+                scale_y_continuous(limits = c(5, 25)
+                                  , breaks = seq(0, 100, by = 5)) +
                 labs(x = "NaCl (mM)"
                      , y = "Guaiacol peroxidase (GPX)"
                      ) +
                 theme(legend.position = "none"
-                      , axis.text.y = element_text(angle = 90)
                       )
               )
 
@@ -465,10 +618,11 @@ export <-  list(legend[[4]], fgrids) %>%
                      , ncol = 1
                      , rel_heights = c(0.1, 1))
   
-export %>% 
-  ggsave(plot = ., "manuscript/Figure-03.jpg", width = 22, height = 20
+plot <- export %>% 
+  ggsave(plot = ., "manuscript/Figure-04.jpg", width = 22, height = 20
          , units = "cm")
+
+plot %>% include_graphics()
 ```
 
-## (iv) to determine the growth capacity of BR-11001 and BR-11002 in saline media, as a proxy for their viability and functional persistence under stress.
 
