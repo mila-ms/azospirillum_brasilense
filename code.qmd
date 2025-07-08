@@ -195,11 +195,11 @@ plots <- list(rs$od_600_nm$plot +
                                   , breaks = seq(0, 200, by = 0.25)) +
                 labs(x = ""
                      , y = expression(OD[600]~"(nm)")
-                     ) +
-                theme(legend.position = "none"
-                      , axis.text.x = element_blank()
-                      , strip.text = element_blank()
-                      )
+                     ) #+
+                # theme(legend.position = "none"
+                #       , axis.text.x = element_blank()
+                #       , strip.text = element_blank()
+                #       )
               , rs$bacterial_growth$plot +
                 scale_y_log10(
                   limits = c(2e8, 20e8),
@@ -235,8 +235,8 @@ export <-  list(legend[[3]], fgrids) %>%
                      , ncol = 1
                      , rel_heights = c(0.1, 1))
   
-plot <- export %>% 
-  ggsave(plot = ., "manuscript/Figure-01.jpg", width = 22, height = 20
+plot <- plots[[1]] %>% 
+  ggsave2(plot = ., "manuscript/Figure-01.jpg", width = 16, height = 15
          , units = "cm")
 
 plot %>% include_graphics()
@@ -415,7 +415,11 @@ plot %>% include_graphics()
 dtx <- growth %>% 
   mutate(strains = factor(strains
                          , levels = c("Control", "BR-11001", "BR-11002")
-                         , ordered = TRUE))
+                         , ordered = TRUE)) %>% 
+  merge(. , gsm) %>% 
+  mutate(svi = (shoot_length + root_length)*grp)
+
+
 # trait <- "shoot_length" 
 
 rs <- xfun::cache_rds({
@@ -531,11 +535,11 @@ plots <- list(rs$shoot_length$plot +
                 theme(legend.position = "none"
                       , axis.text.y = element_text(angle = 90)
                       )
-              , rs$humidity_cont$plot +
-                scale_y_continuous(limits = c(0.1, 0.6)
-                                  , breaks = seq(0, 100, by = 0.1)) +
+              , rs$svi$plot +
+                scale_y_continuous(limits = c(100, 1100)
+                                  , breaks = seq(0, 2000, by = 200)) +
                 labs(x = "NaCl (mM)"
-                     , y = "Moisture content (%)"
+                     , y = "Seedling vigor index"
                      ) +
                 theme(legend.position = "none"
                       , axis.text.y = element_text(angle = 90)
