@@ -239,7 +239,7 @@ plot <- plots[[1]] %>%
   ggsave2(plot = ., "manuscript/Figure-01.jpg", width = 16, height = 15
          , units = "cm")
 
-plot %>% include_graphics()
+# plot %>% include_graphics()
 ```
 
 ## To assess the effect of salinity gradient (0 to 450 mM NaCl) on seed germination and cotyledon emergence as indicators of bacterial efficacy
@@ -406,8 +406,9 @@ plot <- export %>%
   ggsave(plot = ., "manuscript/Figure-02.jpg", width = 20, height = 18
          , units = "cm")
 
-plot %>% include_graphics()
+# plot %>% include_graphics()
 ```
+
 
 ## To quantify seedling growth by measuring shoot and root length and dry biomass in inoculated versus non-inoculated treatments under saline and non-saline conditions
 
@@ -564,7 +565,7 @@ plot <- export %>%
   ggsave(plot = ., "manuscript/Figure-03.jpg", width = 22, height = 20
          , units = "cm")
 
-plot %>% include_graphics()
+# plot %>% include_graphics()
 ```
 
 ## To evaluate physiological responses to salinity through the activity of antioxidant enzymes (SOD, CAT, APX, GPX)
@@ -626,7 +627,78 @@ plot <- export %>%
   ggsave(plot = ., "manuscript/Figure-04.jpg", width = 22, height = 20
          , units = "cm")
 
-plot %>% include_graphics()
+# plot %>% include_graphics()
 ```
 
+# Supplementary Material
+
+## Supplementary Figure
+
+```{r}
+circular_crop <- function(img) {
+  # Obtener dimensiones de la imagen
+  info <- image_info(img)
+  size <- min(info$width, info$height) # Usar la menor dimensión para hacer la imagen cuadrada
+  
+  # Recortar la imagen a un tamaño cuadrado centrado
+  img_square <- image_crop(img, paste0(size, "x", size, "+0+0"))
+
+  # Crear una máscara circular
+  mask <- image_blank(size, size, color = "none") %>% # Fondo transparente
+    image_draw()
+  grid::grid.circle(r = 0.4, gp = grid::gpar(fill = "black", col = NA)) # Círculo negro sobre fondo transparente
+  dev.off()
+
+  # Aplicar la máscara (recortar la imagen en un círculo)
+  img_circular <- image_composite(img_square, mask, operator = "CopyOpacity")
+
+  # Crear un fondo negro del mismo tamaño
+  background <- image_blank(size, size, color = "black")
+
+  # Poner la imagen circular sobre el fondo negro
+  img_final <- image_composite(background, img_circular, operator = "Over")
+
+  return(img_final)
+}
+
+plates <- list.files(path = "photos/"
+                  , full.names = T
+                  , recursive = T
+                  ) 
+
+lbls <- plates %>% 
+  gsub(".*_(.*)", "\\1", .) %>% 
+  gsub("^(\\d+)-days", "\\1 days", .) %>% 
+  gsub(".png", "", .) 
+
+lbls %>% dput()
+
+grids <- plates %>% 
+  map( ~ image_read(.)) %>% 
+  # map( ~ circular_crop(.)) %>%
+  map( ~ image_transparent(., "black")) %>%
+  map( ~ image_ggplot(.))
+
+rw1 <- grids[9:12] %>% 
+  plot_grid(plotlist = ., ncol = 4
+            , labels = c("", "5 days", "8 days", "10 days")
+            , label_x = 0.15
+            )
+
+rw2 <- grids[1:4] %>% 
+  plot_grid(plotlist = ., ncol = 4)
+
+rw3 <- grids[5:8] %>% 
+  plot_grid(plotlist = ., ncol = 4)
+
+
+plots <- list(rw1, rw2, rw3) %>% 
+  plot_grid(plotlist = ., nrow = 3
+            , labels = c("Control", "BR-11001", "BR-11002")
+            , hjust = 0
+            ) %>% 
+  ggsave2(plot = ., "manuscript/SFigure-01.jpg"
+          , width = 25, height = 22, units = "cm")
+  
+```
 
