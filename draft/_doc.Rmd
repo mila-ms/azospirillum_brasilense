@@ -2,7 +2,7 @@
 
 
 
-Jose David Apaza-Calcina^1, 2^ \*, Milagros Ninoska Munoz-Salas^3^, Flavio Lozano-Isla^4, 5^, Rachel Passos Rezende^1^, Raner José Santana Silva^6^ \*
+Jose David Apaza-Calcina^1,2^\*, Milagros Ninoska Munoz-Salas^3^, Flavio Lozano-Isla^4,5^, Rachel Passos Rezende^1^, Raner José Santana Silva^6^ \*
 
 
 
@@ -30,7 +30,7 @@ Jose David Apaza-Calcina^1, 2^ \*, Milagros Ninoska Munoz-Salas^3^, Flavio Lozan
 
 
 
-\*Corresponding authors: [jdacalcina@uesc.br](mailto:jdacalcina@uesc.br); [ranerbio@yahoo.com.br](mailto:ranerbio@yahoo.com.br)
+\*Corresponding authors: [jdacalcina@uesc.br](mailto:jdacalcina@uesc.br)
 
 
 
@@ -42,7 +42,7 @@ Jose David Apaza-Calcina: 0000-0001-6198-0530
 
 
 
-Milagros Ninoska Munoz Salas: 0009-0001-7278-5690
+Milagros Ninoska Munoz-Salas: 0009-0001-7278-5690
 
 
 
@@ -124,7 +124,7 @@ Following the salinity assay, the *A. brasiliense* strains BR-11001 (rhizospheri
 
 
 
-Quinoa seeds were disinfected by immersion in 75% ethanol for 1 minute, followed by treatment with 2% sodium hypochlorite for 2 minutes. Seeds were then rinsed thoroughly three times with sterile distilled water. For inoculation, sterilized seeds were soaked in the bacterial suspension for 45 minutes at 25°C, following the methodology outlined by [[17]](https://www.zotero.org/google-docs/?yLeBr3).
+Quinoa seeds were disinfected by immersion in 75% ethanol for 1 minute, followed by treatment with 2% sodium hypochlorite for 2 minutes. Seeds were then rinsed thoroughly three times with sterile distilled water. For inoculation, sterilized seeds were soaked in the bacterial suspension for 45 minutes at 25°C, following the methodology outlined by Barbieri et al. [[17]](https://www.zotero.org/google-docs/?yLeBr3).
 
 
 
@@ -136,7 +136,7 @@ The germination experiment was structured as a completely randomized block desig
 
 
 
-Daily observations were made to monitor radicle emergence, with germination considered effective when the radicle extended at least 2 mm, following the International Rules for Seed Testing [[20]](https://www.zotero.org/google-docs/?4auGmq). To quantify germination performance and seed vigor, the following indices were calculated: Germination Percentage (GP), Mean Germination Time (MGT), Synchronization Index (SYN), and Uncertainty Index (UNC). These metrics were derived using the equations described by [[21]](https://www.zotero.org/google-docs/?CC48Yc) and implemented in the GerminaR R package [[22]](https://www.zotero.org/google-docs/?R5SEr5).
+Daily observations were made to monitor radicle emergence, with germination considered effective when the radicle extended at least 2 mm, following the International Rules for Seed Testing [[20]](https://www.zotero.org/google-docs/?4auGmq). To quantify germination performance and seed vigor, the following indices were calculated: Germination Percentage (GP), Mean Germination Time (MGT), Synchronization Index (SYN), and Uncertainty Index (UNC). These metrics were derived using the equations described by Ranal and Santana [[21]](https://www.zotero.org/google-docs/?CC48Yc) and implemented in the GerminaR R package [[22]](https://www.zotero.org/google-docs/?R5SEr5).
 
 
 
@@ -160,7 +160,7 @@ Where $\overline{L_r}$ is the mean root length, expressed in centimeters (cm), a
 
 
 
-The activities of four key antioxidant enzymes - superoxide dismutase (SOD), catalase (CAT), ascorbate peroxidase (APX), and guaiacol peroxidase (GPX) - were determined in ten-day-old *Chenopodium quinoa* seedlings to evaluate their response to oxidative stress induced by salinity. For enzyme extraction, 0.1 grams of fresh plant tissue was homogenized in 1.5 milliliters of ice-cold extraction buffer (50 mM potassium phosphate, pH 7.0; 1 mM EDTA; and 1% polyvinylpyrrolidone [PVP]). The homogenate was centrifuged at 12,000 rpm for 15 minutes at 4 °C, and the supernatant was collected for subsequent enzymatic assays. Protein concentration was determined using the Bradford method (Bradford, 1976). All enzymatic analyses were performed at 25 °C, following adaptations of the protocols described by [[24]](https://www.zotero.org/google-docs/?xnEynI).
+The activities of four key antioxidant enzymes - superoxide dismutase (SOD), catalase (CAT), ascorbate peroxidase (APX), and guaiacol peroxidase (GPX) - were determined in ten-day-old *Chenopodium quinoa* seedlings to evaluate their response to oxidative stress induced by salinity. For enzyme extraction, 0.1 grams of fresh plant tissue was homogenized in 1.5 milliliters of ice-cold extraction buffer (50 mM potassium phosphate, pH 7.0; 1 mM EDTA; and 1% polyvinylpyrrolidone [PVP]). The homogenate was centrifuged at 12,000 rpm for 15 minutes at 4 °C, and the supernatant was collected for subsequent enzymatic assays. Protein concentration was determined using the Bradford method (Bradford, 1976). All enzymatic analyses were performed at 25 °C, following adaptations of the protocols described by Sinha et al. [[24]](https://www.zotero.org/google-docs/?xnEynI).
 
 
 
@@ -168,11 +168,11 @@ SOD activity was evaluated using a method adapted from Beyer and Fridovich (1987
 
 
 
-CAT activity was determined spectrophotometrically by measuring the rate of hydrogen peroxide (H₂O₂) decomposition, according to the method described by [[25]](https://www.zotero.org/google-docs/?48EMLY). The reaction system (2.0 mL) contained 50 mM potassium phosphate buffer (pH 7.0), 20 mM H₂O₂, and 100 µL of enzymatic extract. The reaction began upon the addition of the extract, and the decrease in absorbance at 240 nm was monitored every 30 seconds for 2 minutes using a UV-Vis spectrophotometer. Catalase activity, expressed as micromoles of H₂O₂ decomposed per minute per milligram of protein, was calculated from the linear decrease in absorbance using the molar extinction coefficient of H₂O₂ (ε = 36 M⁻¹ cm⁻¹).
+CAT activity was determined spectrophotometrically by measuring the rate of hydrogen peroxide (H₂O₂) decomposition, according to the method described by Aebi [[25]](https://www.zotero.org/google-docs/?48EMLY). The reaction system (2.0 mL) contained 50 mM potassium phosphate buffer (pH 7.0), 20 mM H₂O₂, and 100 µL of enzymatic extract. The reaction began upon the addition of the extract, and the decrease in absorbance at 240 nm was monitored every 30 seconds for 2 minutes using a UV-Vis spectrophotometer. Catalase activity, expressed as micromoles of H₂O₂ decomposed per minute per milligram of protein, was calculated from the linear decrease in absorbance using the molar extinction coefficient of H₂O₂ (ε = 36 M⁻¹ cm⁻¹).
 
 
 
-APX activity was measured using a modified version of the method described by [[26]](https://www.zotero.org/google-docs/?CFoLh3), optimized for Chenopodium quinoa seedlings. The 3.0 mL reaction mixture contained 50 mM potassium phosphate buffer (pH 7.0), 0.25 mM ascorbic acid, 5 mM H₂O₂, and 100 µL of enzymatic extract. The reaction was initiated by the addition of H₂O₂, and the decrease in absorbance was monitored at 290 nm for one minute using a UV-Vis spectrophotometer. Enzymatic activity was calculated using the molar extinction coefficient of ascorbate (ε = 2.8 mM⁻¹ cm⁻¹) and expressed as micromoles of ascorbate oxidized per minute per milligram of protein.
+APX activity was measured using a modified version of the method described by Rekik et al. [[26]](https://www.zotero.org/google-docs/?CFoLh3), optimized for Chenopodium quinoa seedlings. The 3.0 mL reaction mixture contained 50 mM potassium phosphate buffer (pH 7.0), 0.25 mM ascorbic acid, 5 mM H₂O₂, and 100 µL of enzymatic extract. The reaction was initiated by the addition of H₂O₂, and the decrease in absorbance was monitored at 290 nm for one minute using a UV-Vis spectrophotometer. Enzymatic activity was calculated using the molar extinction coefficient of ascorbate (ε = 2.8 mM⁻¹ cm⁻¹) and expressed as micromoles of ascorbate oxidized per minute per milligram of protein.
 
 
 
@@ -207,7 +207,11 @@ The model was implemented using the *lmer()* function from the *lme4*  R package
 
 
 
-When statistically significant main or interaction effects were detected, a pairwise comparisons were used using Tukey’s Honest Significant Difference test, implemented through the *emmeans* package [[29]](https://www.zotero.org/google-docs/?3QqqqL). 
+When statistically significant main or interaction effects were detected, pairwise comparisons were used using Tukey’s Honest Significant Difference test, implemented through the *emmeans* package [[29]](https://www.zotero.org/google-docs/?3QqqqL). 
+
+
+
+The complete code and reproducible statistical analysis are available in Supplementary Material 1.
 
 
 # **Results**
@@ -218,7 +222,7 @@ When statistically significant main or interaction effects were detected, a pair
 
 
 
-Bacterial viability, assessed through optical density at 600 nm (OD₆₀₀), was significantly affected by strain identity, salinity level, and their interaction (p < 0.001, [Figure 1](?tab=t.0#bookmark=id.nx22jx7u46bw)). Across the salinity gradient (0-900 mM NaCl), all *A. brasilense* strains showed progressive reductions in OD₆₀₀, with statistically significant differences among strains at each salt concentration.
+Bacterial viability, assessed through optical density at 600 nm (OD₆₀₀), was significantly affected by strain identity, salinity level, and their interaction (p < 0.001, Figure 2). Across the salinity gradient (0-900 mM NaCl), all *A. brasilense* strains showed progressive reductions in OD₆₀₀, with statistically significant differences among strains at each salt concentration.
 
 
 
@@ -230,12 +234,16 @@ At 450 mM, BR-11002 (1.0025) and BR-11001 (0.8825) retained OD₆₀₀ values c
 
 
 
+
+
+
+
+
+
+
+
+
 The full factorial analysis indicated a significant strain × NaCl interaction (F₆,₁₂₁ = 18.121, p < 0.001), confirming differential salinity tolerance among the strains across NaCl levels.
-
-
-
-
-
 
 
 
@@ -271,7 +279,7 @@ Germination synchrony (GS) followed an inverse trend, decreasing as NaCl concent
 
 
 
-Significant main effects of inoculation, salinity level, and their interaction (p < 0.001) were detected for all measured seedling parameters, including shoot length, root length, dry weight, and seedling vigor index (SVI) ([Figure 4](?tab=t.0#bookmark=id.9wot7xjhzvp8)). Inoculation with *A. brasilense* strains BR-11001 and BR-11002 consistently enhanced seedling performance across all salinity treatments when compared to the uninoculated control.
+Significant main effects of inoculation, salinity level, and their interaction (p < 0.001) were detected for all measured seedling parameters, including shoot length, root length, dry weight, and seedling vigor index (SVI) ([@fig-id.9wot7xjhzvp8]). Inoculation with *A. brasilense* strains BR-11001 and BR-11002 consistently enhanced seedling performance across all salinity treatments when compared to the uninoculated control.
 
 
 
@@ -296,7 +304,7 @@ Seedling vigor index (SVI) showed a sharp decrease with salinity, but inoculated
 
 
 
-The activities of all four antioxidant enzymes - superoxide dismutase (SOD), catalase (CAT), ascorbate peroxidase (APX), and guaiacol peroxidase (GPX) - were significantly affected by salinity, *A. brasilense* inoculation, and their interaction (p < 0.001, [Figure 5](?tab=t.0#bookmark=id.lircn5hsz1xy)).
+The activities of all four antioxidant enzymes - superoxide dismutase (SOD), catalase (CAT), ascorbate peroxidase (APX), and guaiacol peroxidase (GPX) - were significantly affected by salinity, *A. brasilense* inoculation, and their interaction (p < 0.001, [@fig-id.lircn5hsz1xy]).
 
 
 
@@ -337,9 +345,7 @@ The biochemical response further confirmed the functional role of *A. brasilense
 
 
 
-These physiological and biochemical responses are likely governed by a complex interplay between microbial traits and plant regulatory pathways. Beneficial rhizobacteria such as *A. brasilense* are known to synthesize exopolysaccharides, osmoprotectants, and hormones that prime plants for stress resistance. In parallel, host plants activate transcriptional responses that reinforce antioxidant defenses and facilitate ion compartmentalization. Transcriptomic analyses in rice and wheat have demonstrated that *A. brasilense* inoculation upregulates genes involved in ABA signaling, redox homeostasis, and ion transport under salt stress [[30,49,50]](https://www.zotero.org/google-docs/?CHq7ob). For instance, [[49]](https://www.zotero.org/google-docs/?B7WyWs) showed that ABA accumulation under salinity modifies root meristem activity and cell expansion - a process modulated by bacterial inoculation through hormonal crosstalk. Although gene expression was not directly assessed in the present study, the observed phenotypic and biochemical responses strongly suggest that analogous regulatory mechanisms were activated in quinoa.
-
-
+These physiological and biochemical responses are likely governed by a complex interplay between microbial traits and plant regulatory pathways. Beneficial rhizobacteria such as *A. brasilense* are known to synthesize exopolysaccharides, osmoprotectants, and hormones that prime plants for stress resistance. In parallel, host plants activate transcriptional responses that reinforce antioxidant defenses and facilitate ion compartmentalization. Transcriptomic analyses in rice and wheat have demonstrated that *A. brasilense* inoculation upregulates genes involved in ABA signaling, redox homeostasis, and ion transport under salt stress [[30,49,50]](https://www.zotero.org/google-docs/?CHq7ob). For instance, [[49]](https://www.zotero.org/google-docs/?B7WyWs) showed that ABA accumulation under salinity modifies root meristem activity and cell expansion, a process modulated by bacterial inoculation through hormonal crosstalk. Although gene expression was not directly assessed in the present study, the observed phenotypic and biochemical responses strongly suggest that analogous regulatory mechanisms were activated in quinoa.
 
 In light of the expanding prevalence of salt-affected soils and the rising global interest in quinoa as a resilient and nutritious crop, the use of *A. brasilense* strain BR-11002 as a bioinoculant presents a promising and eco-compatible strategy. The consistent improvements across germination, seedling vigor, and antioxidant capacity highlight the strain’s versatility and potential scalability in saline agroecosystems. These findings support the integration of halotolerant PGPB into sustainable agriculture frameworks aimed at enhancing crop performance in degraded and marginal lands.
 
@@ -363,9 +369,7 @@ This study demonstrates that inoculation with halotolerant *Azospirillum brasile
 
 
 
-**Data Availability Statement:** The data presented in this study are available upon request from the
-
-corresponding author.
+**Data Availability Statement:** The data presented in this study are available upon request from the corresponding author.
 
 
 
@@ -374,8 +378,6 @@ corresponding author.
 
 
 **Conflicts of Interest:** The authors declare no conflicts of interest.
-
-
 
 
 
@@ -483,11 +485,16 @@ corresponding author.
 [50. 	Sah, S.K.; Reddy, K.R.; Li, J. Abscisic Acid and Abiotic Stress Tolerance in Crop Plants. *Front. Plant Sci.* **2016**, *7*, doi:10.3389/fpls.2016.00571.](https://www.zotero.org/google-docs/?B62rzm)
 
 \newpage
-## ![Optical density (OD₆₀₀) of *A. brasilense* strains grown in Luria–Bertani medium with NaCl concentrations ranging from 0 to 900 mM (n = 4). Error bars represent ± SE. Lowercase letters indicate differences among strains within each salinity level; uppercase letters indicate differences among NaCl levels within each strain (Tukey’s HSD, p < 0.05).](img_0.jpg){#fig-id.nx22jx7u46bw}
+```{r}
+#| label: fig-id.wrzyeee0lz3o
+#| fig-cap: "Optical density (OD₆₀₀) of *A. brasilense* strains grown in Luria–Bertani medium with NaCl concentrations ranging from 0 to 900 mM (n = 4). Error bars represent ± SE. Lowercase letters indicate differences among strains within each salinity level; uppercase letters indicate differences among NaCl levels within each strain (Tukey’s HSD, p < 0.05)."
+
+knitr::include_graphics("draft/img_0.jpg")
+```
 \newpage
 ```{r}
 #| label: fig-id.okr5th3lhahg
-#| fig-cap: "Visual comparison of *Chenopodium* *quinoa* germination and early seedling development under 300 mM NaCl at 5, 8, and 10 days after sowing. Treatments include: uninoculated control (seeds treated with sterile Luria–Bertani medium), inoculation with *Azospirillum brasilense* strain BR-11001, and BR-11002. Inoculated seeds - particularly BR-11002 - exhibited enhanced radicle emergence, shoot elongation, and seedling vigor."
+#| fig-cap: "Visual comparison of *Chenopodium quinoa* germination and early seedling development under 300 mM NaCl at 5, 8, and 10 days after sowing. Treatments include: uninoculated control (seeds treated with sterile Luria–Bertani medium), inoculation with *Azospirillum brasilense* strain BR-11001, and BR-11002. Inoculated seeds - particularly BR-11002 - exhibited enhanced radicle emergence, shoot elongation, and seedling vigor."
 
 knitr::include_graphics("draft/img_1.jpg")
 ```

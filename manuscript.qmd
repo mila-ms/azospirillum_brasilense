@@ -9,7 +9,7 @@ format:
     toc: false
     toc-title: Indice
     section-numbers: true
-    reference-doc: "journal-plants/Frontiers_Template.docx"
+    reference-doc: "journal-plants/template.docx"
     output-file: "manuscript"
 editor_options: 
   chunk_output_type: console
