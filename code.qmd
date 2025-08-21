@@ -1,15 +1,15 @@
 ---
 title: "_Azospirillum brasilense_ as a bioinoculant to alleviate salinity effects on quinoa seed germination"
-author: "Jose David Apaza-Calcina, Milagros Ninoska Munoz-Salas, Flavio Lozano-Isla, Rachel Passos Rezende, Raner Santana"
 format:
   html:
     toc: true
-    toc-expand: 2
+    toc-expand: true
+    toc-depth: 4
     toc-location: left
     number-sections: true
     self-contained: true
     code-fold: true
-    output-file: "ESM_01"
+    output-file: "ESM_1"
 editor_options: 
   chunk_output_type: console
 execute: 
@@ -23,14 +23,9 @@ execute:
 ```{r}
 #| label:  setup
 
-source('https://inkaverse.com/setup.r')
 library(GerminaR)
 library(scales)
-
-cat("Project: ", getwd())
-cat("CPU cores available: ", parallel::detectCores())
-RhpcBLASctl::blas_set_num_threads(parallel::detectCores()*0.8)
-session_info()
+source('https://inkaverse.com/setup.r')
 ```
 
 # Base de datos
@@ -42,6 +37,18 @@ session_info()
 ```{r}
 gs <- "https://docs.google.com/spreadsheets/d/1t20oZQ_NR4zC8-gwkmV6UUMZwC24Hvh6WNJVtCXCF30/edit?gid=506947099#gid=506947099" %>% 
   as_sheets_id()
+
+bacterial <- gs %>%
+  range_read("bacterial") %>%
+  rename_with(~ iconv(.x, from = "UTF-8", to = "ASCII//TRANSLIT")) %>% 
+  rename_with(~ str_replace_all(.x, "^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$", "")) %>% 
+  rename_with(~ tolower(gsub("[^[:alnum:]_]", "_", .x))) %>% 
+  mutate(across(1:repetition, ~ as.factor(.))) %>% 
+  dplyr::select(where(~ mean(!is.na(.)) >= 0.1))
+  
+bacterial %>% str()
+
+bacterial %>% web_table()
 
 germ <- gs %>%
   range_read("radicula") %>%
@@ -78,18 +85,6 @@ growth <- gs %>%
 growth %>% str()
 
 growth %>% web_table()
-
-bacterial <- gs %>%
-  range_read("bacterial") %>%
-  rename_with(~ iconv(.x, from = "UTF-8", to = "ASCII//TRANSLIT")) %>% 
-  rename_with(~ str_replace_all(.x, "^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$", "")) %>% 
-  rename_with(~ tolower(gsub("[^[:alnum:]_]", "_", .x))) %>% 
-  mutate(across(1:repetition, ~ as.factor(.))) %>% 
-  dplyr::select(where(~ mean(!is.na(.)) >= 0.1))
-  
-bacterial %>% str()
-
-bacterial %>% web_table()
 
 # https://colorbrewer2.org/
 ```
@@ -497,7 +492,6 @@ export %>%
          , units = "cm")
 ```
 
-
 ## To quantify seedling growth by measuring shoot and root length and dry biomass in inoculated versus non-inoculated treatments under saline and non-saline conditions
 
 ```{r}
@@ -726,6 +720,100 @@ export %>%
          , units = "cm")
 ```
 
+# Interaction phenotipic and biochemical
 
+```{r}
+fbclean <- 1:length(rs) %>%  map( \(x) { 
+  
+  rs[[x]]$mc %>% 
+    dplyr::select(1:emmean) %>% 
+    dplyr::rename(!!names(rs)[x] := emmean)
+  
+  }) %>% 
+  Reduce(function(...) merge(..., all = TRUE), .) 
+```
+
+```{r}
+dta <- fbclean %>% 
+  dplyr::select(!c(fresh_weight
+                   , ms_porc, humidity_cont, humidity_porc, 
+                   , grp:syn
+                   )) %>% 
+  unite("treat", c(strains, nacl), remove = F, sep = "_") %>% 
+  column_to_rownames("treat")
+
+mv <- PCA(X = dta, scale.unit = T, quali.sup = 1:2, graph = F)
+
+var <- plot.PCA(mv, choix = c("var")
+                , autoLab = "yes"
+                , cex = 1.2
+                ) 
+
+varcor <- mv$ind$coord %>% 
+  data.frame() %>% 
+  rownames_to_column("treat") %>% 
+  separate(treat, c("G1", "G2"), remove = F, sep = "_")
+
+test <- plot.PCA(mv
+                , choix = c("ind")
+                , autoLab = "yes"
+                , cex = 0.8
+                , invisible = "quali"
+                , habillage = 1
+                )
+
+ind <- ggplot(varcor,
+                aes(x = Dim.1,
+                    y = Dim.2,
+                    color = G1,
+                    shape = G1,
+                    label = treat)) +
+  geom_point(size = 1.8) +
+  ggrepel::geom_text_repel(size = 4, max.overlaps = Inf
+                           ) +  
+  scale_shape_manual(values = c(23, 22, 17, 24, 18, 21)) +  
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+  theme_classic(base_size = 9) +
+  theme(
+    legend.position = "bottom",
+    legend.box = "horizontal",
+    panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.6),
+    plot.title = element_text(hjust = 0.5, face = "bold") 
+  ) +
+  labs(
+    title = "PCA graph of individuals",
+    x = paste0("Dim 1 (", round(mv$eig[1, 2], 2), "%)"),
+    y = paste0("Dim 2 (", round(mv$eig[2, 2], 2), "%)"),
+    color = "Treatment",
+    shape = "Treatment"
+  ) +
+  guides(
+    color = guide_legend(nrow = 1, byrow = TRUE),
+    shape = guide_legend(nrow = 1, byrow = TRUE)
+  )
+
+grid <- list(var, ind) %>% 
+  plot_grid(plotlist = ., ncol = 2, labels = "AUTO", rel_widths = c(1, 1.3))
+
+summary(mv, nbelements = Inf, nb.dec = 1)
+pcainfo <- factoextra::get_pca_var(mv)
+pcainfo$cor
+pcainfo$contrib
+
+plot <- grid %>% 
+  ggsave2(plot = ., "manuscript/Figure-06.eps"
+          , width = 35
+          , height = 15
+          , units = "cm")
+
+plot <- grid %>% 
+  ggsave2(plot = ., "manuscript/Figure-06.jpg"
+          , width = 35
+          , height = 15
+          , units = "cm")
+
+include_graphics(plot)
+```
 
 
