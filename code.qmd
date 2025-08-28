@@ -186,28 +186,11 @@ rs <- xfun::cache_rds({
 
 ```{r}
 plots <- list(rs$od_600_nm$plot +
-                scale_y_continuous(limits = c(0, 1.75)
+                scale_y_continuous(limits = c(0.175, 1.51)
                                   , breaks = seq(0, 200, by = 0.25)) +
-                labs(x = ""
+                labs(x = "NaCl (mM)"
                      , y = expression(OD[600]~"(nm)")
-                     ) #+
-                # theme(legend.position = "none"
-                #       , axis.text.x = element_blank()
-                #       , strip.text = element_blank()
-                #       )
-              , rs$bacterial_growth$plot +
-                scale_y_log10(
-                  limits = c(2e8, 20e8),
-                  breaks = 10^seq(8, 20, by = 0.1),
-                  labels = trans_format("log10", math_format(10^.x))
-                  ) +
-                labs(x = ""
-                     , y = "Bacterial growth"
-                     ) +
-                theme(legend.position = "none"
-                      # , axis.text.x = element_blank()
-                      # , strip.text = element_blank()
-                      )
+                     )
               )
 
 legend <- get_plot_component(
