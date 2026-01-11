@@ -9,7 +9,7 @@ format:
     toc: false
     toc-title: Indice
     section-numbers: true
-    reference-doc: "journal-plants/template.docx"
+    reference-doc: "files/template.docx"
     output-file: "manuscript"
 editor_options: 
   chunk_output_type: console
@@ -41,7 +41,7 @@ crossref:
 # browseURL("https://docs.google.com/document/d/1ySwDDV4CYy3IYeRz8Fg_sUGJ30KOWt2aGAcdRm7EHFU/edit")
 
 source("http://inkaverse.com/docs.r")
-doc <- inti::gdoc2qmd(file = "draft.zip"
+doc <- inti::gdoc2qmd(file = "draft2.zip"
                       , type = "listfull"
                       )
 params <- doc$params
