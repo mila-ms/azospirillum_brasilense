@@ -31,19 +31,12 @@ crossref:
 source("http://inkaverse.com/docs.r")
 ```
 
-
-```{r}
-# browseURL("C:\\Users\\LENOVO\\git\\inti\\R\\rticle.R")
-source("C:\\Users\\LENOVO\\git\\inti\\R\\rticle.R")
-```
-
-
 ```{r}
 #| eval: true
 #| results: 'asis'
 
 "draft.md" %>% 
-  rticle(type = "list") %>% # ["asis" or "list"]
+  rticle(type = "asis") %>% # ["asis" or "list"]
   knitr::knit_child(quiet = TRUE) %>% 
   cat(sep = '\n')
 ```
